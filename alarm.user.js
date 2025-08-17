@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         wplace alarm
 // @namespace    opoccomaxao.github.io
-// @version      1.0.1
+// @version      1.0.2
 // @description  Alarms for wplace
 // @author       opoccomaxao
 // @match        https://wplace.live
@@ -249,7 +249,7 @@ function addThreshold() {
   if (value) {
     let prev = Config.getObject("thresholds") || [];
     prev.push(value);
-    prepareAndSaveThresholds(prev);
+    saveAndUpdateThresholds(prev);
     showThresholds();
   }
 }
@@ -259,13 +259,13 @@ function removeThreshold() {
   if (value) {
     let prev = Config.getObject("thresholds") || [];
     prev = prev.filter((t) => t !== value);
-    prepareAndSaveThresholds(prev);
+    saveAndUpdateThresholds(prev);
     showThresholds();
   }
 }
 
 function clearThresholds() {
-  Config.setObject("thresholds", []);
+  saveAndUpdateThresholds([]);
   showThresholds();
 }
 
@@ -273,15 +273,18 @@ function clearThresholds() {
  * Prepares and saves the thresholds.
  * @param {string[]} thresholds
  */
-function prepareAndSaveThresholds(thresholds) {
-  let set = new Set(thresholds);
-  set.delete("0");
+function saveAndUpdateThresholds(thresholds) {
+  if (thresholds.length > 0) {
+    let set = new Set(thresholds);
+    set.delete("0");
 
-  thresholds = [...set];
-  let parsed = Threshold.parseArray(thresholds);
-  parsed.sort(Threshold.compare);
-  thresholds = parsed.map((t) => t.toString());
+    thresholds = [...set];
+    let parsed = Threshold.parseArray(thresholds);
+    parsed.sort(Threshold.compare);
+    thresholds = parsed.map((t) => t.toString());
+  }
 
   Config.setObject("thresholds", thresholds);
   recalculateThresholds();
+  updateMe();
 }
