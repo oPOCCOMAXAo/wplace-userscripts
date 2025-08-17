@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         wplace alarm
 // @namespace    opoccomaxao.github.io
-// @version      1.0.0
+// @version      1.0.1
 // @description  Alarms for wplace
 // @author       opoccomaxao
 // @match        https://wplace.live
@@ -18,6 +18,7 @@
 // ==/UserScript==
 
 const DEFAULT_INTERVAL_MS = 1000 * 60 * 5; // 5 minutes.
+const RETRY_INTERVAL_MS = 1000 * 10;
 
 /**
  * @typedef {Object} Threshold
@@ -118,12 +119,20 @@ async function showPixelsNotification({ counter = 0, max = 1 }) {
 async function updateMe() {
   let data = await Client.getMe().catch((error) => {
     console.error(error);
-    setTimeout(updateMe, 1000 * 10);
+    setTimeout(updateMe, RETRY_INTERVAL_MS);
   });
+
+  if (data == undefined) {
+    setTimeout(updateMe, RETRY_INTERVAL_MS);
+
+    return;
+  }
 
   let sleepMs = await updateNotifications(data.charges);
   if (sleepMs > 0 && sleepMs < DEFAULT_INTERVAL_MS) {
     setTimeout(updateMe, sleepMs);
+
+    return;
   }
 }
 
@@ -221,11 +230,14 @@ function registerPushRequestCommand(options = {}) {
 
 function showThresholds() {
   let thresholds = Config.getObject("thresholds") || [];
+
+  let message = "";
   if (thresholds.length === 0) {
-    thresholds = ["No thresholds set"];
+    message = "No thresholds set";
+  } else {
+    message = `Current thresholds:\n${thresholds.join("\n")}`;
   }
 
-  let message = `Current thresholds:\n${thresholds.join("\n")}`;
   alert(message);
 }
 
