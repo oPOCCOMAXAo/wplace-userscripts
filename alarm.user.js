@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         wplace alarm
 // @namespace    opoccomaxao.github.io
-// @version      1.0.2
+// @version      1.0.3
 // @description  Alarms for wplace
 // @author       opoccomaxao
 // @match        https://wplace.live
@@ -127,6 +127,8 @@ async function updateMe() {
 
     return;
   }
+
+  updateTitle();
 
   let sleepMs = await updateNotifications(data.charges);
   if (sleepMs > 0 && sleepMs < DEFAULT_INTERVAL_MS) {
@@ -287,4 +289,10 @@ function saveAndUpdateThresholds(thresholds) {
   Config.setObject("thresholds", thresholds);
   recalculateThresholds();
   updateMe();
+}
+
+function updateTitle() {
+  if (globalData.prevMax <= 10) return;
+
+  document.title = `${Math.floor(globalData.prevCount)} / ${Math.floor(globalData.prevMax)} Pixels`;
 }
